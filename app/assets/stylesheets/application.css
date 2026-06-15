@@ -8,3 +8,8 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+.hero-icon { font-size: 4rem; }
+.notification-badge { font-size: 0.6rem; }
+.user-avatar { width: 56px; height: 56px; }
+.notification-icon { min-width: 42px; height: 42px; }
