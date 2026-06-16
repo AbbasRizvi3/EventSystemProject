@@ -122,4 +122,50 @@ RSpec.describe "Users", type: :request do
       end
     end
   end
+
+  describe "GET /users/new" do
+    context "when signed in as admin" do
+      before { sign_in admin }
+
+      it "returns 200" do
+        get new_user_path
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "when signed in as attendee" do
+      before { sign_in attendee }
+
+      it "redirects (not authorized)" do
+        get new_user_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "PATCH /users/:id/update_roles" do
+    context "when signed in as admin" do
+      before { sign_in admin }
+
+      it "updates the user roles and redirects" do
+        patch update_roles_user_path(target_user), params: { role_names: [ "organizer" ] }
+        expect(response).to redirect_to(user_path(target_user))
+      end
+
+      it "rejects admin combined with other roles" do
+        patch update_roles_user_path(target_user), params: { role_names: [ "admin", "attendee" ] }
+        expect(response).to redirect_to(user_path(target_user))
+        expect(flash[:alert]).to include("Admin role cannot be combined")
+      end
+    end
+
+    context "when signed in as attendee" do
+      before { sign_in attendee }
+
+      it "redirects (not authorized)" do
+        patch update_roles_user_path(target_user), params: { role_names: [ "organizer" ] }
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
 end

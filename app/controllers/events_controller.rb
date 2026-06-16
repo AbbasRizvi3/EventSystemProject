@@ -62,10 +62,12 @@ class EventsController < ApplicationController
   end
 
   def registered_events
+    authorize Event, :registered_events?
     @events = current_user.registered_events.page(params[:page]).per(10)
   end
 
   def waitlisted_events
+    authorize Event, :waitlisted_events?
     @events = current_user.waitlisted_events.page(params[:page]).per(10)
   end
 

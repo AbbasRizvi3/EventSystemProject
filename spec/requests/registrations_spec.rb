@@ -52,6 +52,29 @@ RSpec.describe "Registrations", type: :request do
     end
   end
 
+  describe "GET /events/:event_id/registrations" do
+    let(:admin_role) { create(:role, :admin) }
+    let(:admin) { user = create(:user); user.roles << admin_role; user }
+
+    context "when signed in as admin" do
+      before { sign_in admin }
+
+      it "is authorized (policy allows access)" do
+        get event_registrations_path(event)
+        expect(response).not_to redirect_to(root_path)
+      end
+    end
+
+    context "when signed in as attendee" do
+      before { sign_in attendee }
+
+      it "redirects (not authorized)" do
+        get event_registrations_path(event)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "DELETE /events/:event_id/registrations/:id" do
     context "when signed in as attendee" do
       before { sign_in attendee }
