@@ -59,6 +59,14 @@ def created_events?
   user.roles.exists?(name: "admin") || user.roles.exists?(name: "organizer")
 end
 
+def registered_events?
+  user.roles.exists?(name: "admin") || user.roles.exists?(name: "attendee")
+end
+
+def waitlisted_events?
+  user.roles.exists?(name: "admin") || user.roles.exists?(name: "attendee")
+end
+
 class Scope < ApplicationPolicy::Scope
   def resolve
     if user.roles.exists?(name: "admin") || user.roles.exists?(name: "attendee")
