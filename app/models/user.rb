@@ -3,21 +3,26 @@ class User < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable, :confirmable
+
   attr_accessor :skip_default_role
-  after_commit :assign_default_role, on: :create
-  validates :name, presence: true,
-                   length: { minimum: 2, maximum: 50, too_short: "must be at least 2 characters", too_long: "must be at most 50 characters" },
-                   format: { with: /\A[a-zA-Z\s\-']+\z/, message: "can only contain letters, spaces, hyphens, and apostrophes" }
+
   has_many :events, dependent: :destroy
   has_many :registrations, dependent: :destroy
-  has_many :registered_events, through: :registrations, source: :event
+  has_many :confirmed_registrations, -> { where(status: "confirmed") }, class_name: "Registration"
+  has_many :registered_events, through: :confirmed_registrations, source: :event
   has_many :notifications, dependent: :destroy
   has_many :wait_list_entries, dependent: :destroy
   has_many :waitlisted_events, through: :wait_list_entries, source: :event
   has_many :user_roles, dependent: :destroy
   has_many :roles, through: :user_roles
-  after_commit :send_welcome_notification, on: :create
+
+  validates :name, presence: true,
+                   length: { minimum: 2, maximum: 50, too_short: "must be at least 2 characters", too_long: "must be at most 50 characters" },
+                   format: { with: /\A[a-zA-Z\s\-']+\z/, message: "can only contain letters, spaces, hyphens, and apostrophes" }
   validate :admin_role_exclusive
+
+  after_commit :assign_default_role, on: :create
+  after_commit :send_welcome_notification, on: :create
 
   private
 
