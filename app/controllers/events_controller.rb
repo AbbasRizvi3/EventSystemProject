@@ -28,6 +28,7 @@ class EventsController < ApplicationController
     if @event.save
       redirect_to @event, notice: "Event was successfully created."
     else
+      flash.now[:alert] = @event.errors.full_messages.to_sentence
       render :new, status: :unprocessable_entity
     end
   end
@@ -44,8 +45,11 @@ class EventsController < ApplicationController
 
   def destroy
     authorize @event
-    @event.destroy
-    redirect_to events_url, notice: "Event was successfully destroyed."
+    if @event.destroy
+      redirect_to events_url, notice: "Event was successfully destroyed."
+    else
+      redirect_to @event, alert: @event.errors.full_messages.to_sentence
+    end
   end
 
   def cancel

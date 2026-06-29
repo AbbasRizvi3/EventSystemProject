@@ -3,17 +3,11 @@ class EventPolicy < ApplicationPolicy
     true
   end
 
- def show?
-  if user.nil?
-    false
-  elsif user.roles.exists?(name: "admin") || user.roles.exists?(name: "attendee")
-    true
-  elsif user.roles.exists?(name: "organizer")
-    record.user == user || record.registrations.exists?(user: user)
-  else
-    false
+  def show?
+    return false unless user_with_role?
+    return true if admin? || attendee?
+    organizer? && (record.user == user || record.registrations.exists?(user: user))
   end
-end
 
   def new?
     create?
@@ -24,48 +18,50 @@ end
   end
 
   def create?
-    if user.nil?
-      false
-    else
-      user.roles.exists?(name: "admin") || user.roles.exists?(name: "organizer")
-    end
+    user_with_role? && (admin? || organizer?)
   end
 
   def update?
-  if user.nil?
-    false
-  else
-  user.roles.exists?(name: "admin") || (record.user == user && user.roles.exists?(name: "organizer"))
-  end
+    user_with_role? && (admin? || (organizer? && record.user == user))
   end
 
-def destroy?
-  if user.nil?
-    false
-  else
+  def destroy?
+    user_with_role? && admin?
+  end
+
+  def cancel?
+    user_with_role? && (admin? || (organizer? && record.user == user))
+  end
+
+  def created_events?
+    user_with_role? && (admin? || organizer?)
+  end
+
+  private
+
+  def user_with_role?
+    user.present? && user.roles.exists?
+  end
+
+  def admin?
     user.roles.exists?(name: "admin")
   end
-end
 
-def cancel?
-  if user.nil?
-    false
-  else
-    user.roles.exists?(name: "admin") || (record.user == user && user.roles.exists?(name: "organizer"))
+  def organizer?
+    user.roles.exists?(name: "organizer")
   end
-end
 
-def created_events?
-  user.roles.exists?(name: "admin") || user.roles.exists?(name: "organizer")
-end
+  def attendee?
+    user.roles.exists?(name: "attendee")
+  end
 
-class Scope < ApplicationPolicy::Scope
-  def resolve
-    if user.roles.exists?(name: "admin") || user.roles.exists?(name: "attendee")
-      scope.all
-    else
-      scope.where(user: user).or(scope.where(id: Registration.where(user: user).select(:event_id)))
+  class Scope < ApplicationPolicy::Scope
+    def resolve
+      if user.roles.exists?(name: "admin") || user.roles.exists?(name: "attendee")
+        scope.all
+      else
+        scope.where(user: user).or(scope.where(id: Registration.where(user: user).select(:event_id)))
+      end
     end
   end
-end
 end

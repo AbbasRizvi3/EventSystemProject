@@ -8,9 +8,11 @@ class CreateEvents < ActiveRecord::Migration[8.1]
       t.timestamp :start_time, null: false
       t.timestamp :end_time, null: false
       t.integer :capacity, null: false
-      t.string :status, null: false, default: "active"
+      t.integer :status, null: false, default: 0
 
       t.references :user, null: false, foreign_key: true
     end
+
+    add_index :events, :title, unique: true
   end
 end
