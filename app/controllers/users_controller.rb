@@ -1,4 +1,5 @@
 class UsersController < ApplicationController
+  include AdminAuthorizable
   before_action :authenticate_user!
   before_action :authorize_admin, except: [ :show ]
   before_action :set_user, only: [ :show, :destroy, :update_roles ]
@@ -14,8 +15,11 @@ class UsersController < ApplicationController
 
   def destroy
     authorize @user
-    @user.destroy
-    redirect_to users_path, notice: "User deleted."
+    if @user.destroy
+      redirect_to users_path, notice: "User deleted."
+    else
+      redirect_to @user, alert: @user.errors.full_messages.to_sentence
+    end
   end
 
   def new
@@ -80,9 +84,5 @@ class UsersController < ApplicationController
   params.require(:user).permit(:name, :email)
   end
 
-  def authorize_admin
-    unless current_user.roles.exists?(name: "admin")
-      redirect_to root_path, alert: "You are not authorized to perform this action."
-    end
-  end
+
 end
